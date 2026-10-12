@@ -28,22 +28,16 @@ public class Main {
                 opcion = -1;
             }
 
-            if (opcion != 0) {
-                System.out.print("\nPresione ENTER para continuar...");
-                scanner.nextLine();
-            }
-
         } while (opcion != 0);
 
-        System.out.println("==================================");
-        System.out.println("Programa finalizado exitosamente.");
-        System.out.println("==================================");
+        System.out.println("Programa finalizado.");
+   
     }
 
     private static void mostrarMenu() {
-        System.out.println("\n==================================");
-        System.out.println("   CENTRO DE DISTRIBUCION QUINDIO ");
-        System.out.println("==================================");
+        System.out.println("\n   -----    ");
+        System.out.println("   QUINDIOFRESHH ");
+        
         System.out.println("1. Ver resumen del centro");
         System.out.println("2. Ver destinos ordenados");
         System.out.println("3. Buscar paquete por codigo (Secuencial)");
@@ -56,7 +50,6 @@ public class Main {
         System.out.println("10. Registrar entrega de paquete");
         System.out.println("11. Registrar nuevo paquete");
         System.out.println("0. Salir");
-        System.out.println("==================================");
     }
 
     private static void procesarOpcion(int opcion) {
@@ -80,7 +73,7 @@ public class Main {
     // --- METODOS DE CADA OPCION ---
 
     private static void mostrarResumen() {
-        System.out.println("--- RESUMEN DEL CENTRO ---");
+        System.out.println("--- RESUMEN ---");
         System.out.println("Paquetes registrados: " + centro.cantidadPaquetesRegistrados());
         System.out.println("Repartidores registrados: " + centro.cantidadRepartidoresRegistrados());
         System.out.println("Destinos registrados: " + centro.cantidadDestinos());
@@ -89,7 +82,7 @@ public class Main {
     }
 
     private static void listarDestinos() {
-        System.out.println("--- DESTINOS ALFABETICAMENTE ---");
+        System.out.println("--- DESTINOS ORDENADOS ---");
         for (String destino : centro.obtenerDestinosOrdenados()) {
             System.out.println("- " + destino);
         }
@@ -184,18 +177,50 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Error al registrar la entrega: " + e.getMessage());
         }
-        
     }
 
-    private static void registrarEntrega() {
-        System.out.print("Ingrese codigo del paquete entregado (ej. P105): ");
-        String codPaquete = scanner.nextLine().trim();
+    private static void registrarNuevoPaquete() {
+        System.out.println("--- REGISTRO DE NUEVO PAQUETE ---");
+
+        System.out.print("Codigo del paquete (ej. P150): ");
+        String codigo = scanner.nextLine().trim();
+
+        System.out.print("Ciudad de destino: ");
+        String destino = scanner.nextLine().trim();
+
+        double peso;
+        try {
+            System.out.print("Peso en kg (ej. 4.5): ");
+            peso = Double.parseDouble(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El peso debe ser un número valido.");
+            return;
+        }
+
+        int prioridad;
+        try {
+            System.out.print("Prioridad (1 a 5): ");
+            prioridad = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: La prioridad debe ser un numero entero.");
+            return;
+        }
+
+        int tiempoEstimado;
+        try {
+            System.out.print("Tiempo estimado de entrega en minutos (ej. 45): ");
+            tiempoEstimado = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El tiempo estimado debe ser un numero entero.");
+            return;
+        }
 
         try {
-            centro.registrarEntrega(codPaquete);
-            System.out.println("Entrega confirmada para el paquete " + codPaquete + ".");
+            Paquete nuevo = new Paquete(codigo, destino, peso, prioridad, tiempoEstimado);
+            centro.registrarPaquete(nuevo);
+            System.out.println("Paquete " + codigo + " registrado exitosamente en el sistema.");
         } catch (Exception e) {
-            System.out.println("Error al registrar la entrega: " + e.getMessage());
+            System.out.println("Error al registrar paquete: " + e.getMessage());
         }
     }
 
