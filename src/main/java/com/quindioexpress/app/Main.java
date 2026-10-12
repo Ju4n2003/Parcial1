@@ -4,7 +4,6 @@ import com.quindioexpress.model.Paquete;
 import com.quindioexpress.model.Repartidor;
 import com.quindioexpress.service.CentroDistribucion;
 import java.util.Scanner;
-
 public class Main {
 
     private static CentroDistribucion centro = new CentroDistribucion();
