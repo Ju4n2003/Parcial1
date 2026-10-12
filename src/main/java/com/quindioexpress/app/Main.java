@@ -1,7 +1,5 @@
 package com.quindioexpress.app;
 
-package com.quindioexpress.app;
-
 import com.quindioexpress.model.Paquete;
 import com.quindioexpress.model.Repartidor;
 import com.quindioexpress.service.CentroDistribucion;
