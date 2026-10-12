@@ -26,23 +26,14 @@ public class Main {
                 System.out.println("Error: Debe ingresar un numero entero valido.");
                 opcion = -1;
             }
-
-            if (opcion != 0) {
-                System.out.print("\nPresione ENTER para continuar...");
-                scanner.nextLine();
-            }
-
         } while (opcion != 0);
 
-        System.out.println("==================================");
-        System.out.println("Programa finalizado exitosamente.");
-        System.out.println("==================================");
+        System.out.println("Programa finalizado.");
     }
 
     private static void mostrarMenu() {
-        System.out.println("\n==================================");
-        System.out.println("   CENTRO DE DISTRIBUCION QUINDIO ");
-        System.out.println("==================================");
+        System.out.println("\n    ----    ");
+        System.out.println("    QUINDIO FRESH");
         System.out.println("1. Ver resumen del centro");
         System.out.println("2. Ver destinos ordenados");
         System.out.println("3. Buscar paquete por codigo (Secuencial)");
@@ -55,7 +46,7 @@ public class Main {
         System.out.println("10. Registrar entrega de paquete");
         System.out.println("11. Registrar nuevo paquete");
         System.out.println("0. Salir");
-        System.out.println("==================================");
+        
     }
 
     private static void procesarOpcion(int opcion) {
@@ -79,7 +70,7 @@ public class Main {
     // --- METODOS DE CADA OPCION ---
 
     private static void mostrarResumen() {
-        System.out.println("--- RESUMEN DEL CENTRO ---");
+        System.out.println(" RESUMEN DEL CENTRO ");
         System.out.println("Paquetes registrados: " + centro.cantidadPaquetesRegistrados());
         System.out.println("Repartidores registrados: " + centro.cantidadRepartidoresRegistrados());
         System.out.println("Destinos registrados: " + centro.cantidadDestinos());
@@ -88,7 +79,7 @@ public class Main {
     }
 
     private static void listarDestinos() {
-        System.out.println("--- DESTINOS ALFABETICAMENTE ---");
+        System.out.println(" DESTINOS ORDENADOS ");
         for (String destino : centro.obtenerDestinosOrdenados()) {
             System.out.println("- " + destino);
         }
