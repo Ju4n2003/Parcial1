@@ -54,6 +54,7 @@ public class Main {
         System.out.println("8. Obtener siguiente paquete a despachar");
         System.out.println("9. Asignar paquete a repartidor");
         System.out.println("10. Registrar entrega de paquete");
+        System.out.println("11. Registrar nuevo paquete");
         System.out.println("0. Salir");
         System.out.println("==================================");
     }
@@ -70,6 +71,7 @@ public class Main {
             case 8 -> verSiguientePaquete();
             case 9 -> asignarPaquete();
             case 10 -> registrarEntrega();
+            case 11 -> registrarNuevoPaquete();
             case 0 -> {}
             default -> System.out.println("Opcion no valida. Intente de nuevo.");
         }
@@ -170,6 +172,19 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Error al realizar la asignacion: " + e.getMessage());
         }
+    }
+
+    private static void registrarEntrega() {
+        System.out.print("Ingrese codigo del paquete entregado (ej. P105): ");
+        String codPaquete = scanner.nextLine().trim();
+
+        try {
+            centro.registrarEntrega(codPaquete);
+            System.out.println("Entrega confirmada para el paquete " + codPaquete + ".");
+        } catch (Exception e) {
+            System.out.println("Error al registrar la entrega: " + e.getMessage());
+        }
+        
     }
 
     private static void registrarEntrega() {
