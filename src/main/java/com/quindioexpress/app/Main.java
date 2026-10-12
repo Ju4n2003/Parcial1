@@ -3,7 +3,6 @@ package com.quindioexpress.app;
 import com.quindioexpress.model.Paquete;
 import com.quindioexpress.model.Repartidor;
 import com.quindioexpress.service.CentroDistribucion;
-
 import java.util.Scanner;
 
 public class Main {
@@ -184,18 +183,50 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Error al registrar la entrega: " + e.getMessage());
         }
-        
     }
 
-    private static void registrarEntrega() {
-        System.out.print("Ingrese codigo del paquete entregado (ej. P105): ");
-        String codPaquete = scanner.nextLine().trim();
+    private static void registrarNuevoPaquete() {
+        System.out.println("--- REGISTRO DE NUEVO PAQUETE ---");
+
+        System.out.print("Codigo del paquete (ej. P150): ");
+        String codigo = scanner.nextLine().trim();
+
+        System.out.print("Ciudad de destino: ");
+        String destino = scanner.nextLine().trim();
+
+        double peso;
+        try {
+            System.out.print("Peso en kg (ej. 4.5): ");
+            peso = Double.parseDouble(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El peso debe ser un número valido.");
+            return;
+        }
+
+        int prioridad;
+        try {
+            System.out.print("Prioridad (1 a 5): ");
+            prioridad = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: La prioridad debe ser un numero entero.");
+            return;
+        }
+
+        int tiempoEstimado;
+        try {
+            System.out.print("Tiempo estimado de entrega en minutos (ej. 45): ");
+            tiempoEstimado = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El tiempo estimado debe ser un numero entero.");
+            return;
+        }
 
         try {
-            centro.registrarEntrega(codPaquete);
-            System.out.println("Entrega confirmada para el paquete " + codPaquete + ".");
+            Paquete nuevo = new Paquete(codigo, destino, peso, prioridad, tiempoEstimado);
+            centro.registrarPaquete(nuevo);
+            System.out.println("Paquete " + codigo + " registrado exitosamente en el sistema.");
         } catch (Exception e) {
-            System.out.println("Error al registrar la entrega: " + e.getMessage());
+            System.out.println("Error al registrar paquete: " + e.getMessage());
         }
     }
 
