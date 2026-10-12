@@ -37,7 +37,6 @@ public class Main {
     private static void mostrarMenu() {
         System.out.println("\n   -----    ");
         System.out.println("   QUINDIOFRESHH ");
-        
         System.out.println("1. Ver resumen del centro");
         System.out.println("2. Ver destinos ordenados");
         System.out.println("3. Buscar paquete por codigo (Secuencial)");
