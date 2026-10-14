@@ -1,0 +1,1480 @@
+
+
+========== src/main/java/com/quindioexpress/algorithm/AnalisisPaquetes.java ==========
+package com.quindioexpress.algorithm;
+
+import com.quindioexpress.model.Paquete;
+
+import java.util.List;
+import java.util.Objects;
+
+public class AnalisisPaquetes {
+
+    private AnalisisPaquetes() {
+        // Evita crear objetos de esta clase.
+    }
+
+    // --------------------------------------------------
+    // 1. BUSQUEDA BINARIA POR CODIGO
+    // La lista debe estar ordenada por codigo ascendente.
+    // --------------------------------------------------
+
+    public static Paquete busquedaBinaria(
+            List<Paquete> paquetes,
+            String codigo) {
+
+        Objects.requireNonNull(paquetes, "La lista no puede ser nula.");
+        Objects.requireNonNull(codigo, "El codigo no puede ser nulo.");
+
+        int izquierda = 0;
+        int derecha = paquetes.size() - 1;
+
+        while (izquierda <= derecha) {
+
+            int medio = izquierda + (derecha - izquierda) / 2;
+
+            Paquete paquete = paquetes.get(medio);
+
+            int comparacion = paquete.getCodigo().compareTo(codigo);
+
+            if (comparacion == 0) {
+                return paquete;
+            }
+
+            if (comparacion < 0) {
+                izquierda = medio + 1;
+            } else {
+                derecha = medio - 1;
+            }
+        }
+
+        return null;
+    }
+
+    // --------------------------------------------------
+    // 2. PESO TOTAL POR DESTINO (RECURSIVO)
+    // --------------------------------------------------
+
+    public static double pesoTotalPorDestino(
+            List<Paquete> paquetes,
+            String destino) {
+
+        Objects.requireNonNull(paquetes, "La lista no puede ser nula.");
+        Objects.requireNonNull(destino, "El destino no puede ser nulo.");
+
+        return sumarPesos(paquetes, destino, 0);
+    }
+
+    private static double sumarPesos(
+            List<Paquete> paquetes,
+            String destino,
+            int indice) {
+
+        if (indice >= paquetes.size()) {
+            return 0;
+        }
+
+        Paquete paquete = paquetes.get(indice);
+
+        double pesoActual = 0;
+
+        if (paquete.getDestino().equalsIgnoreCase(destino)) {
+            pesoActual = paquete.getPeso();
+        }
+
+        return pesoActual + sumarPesos(
+                paquetes,
+                destino,
+                indice + 1
+        );
+    }
+
+    // --------------------------------------------------
+    // 3. CONTAR PAQUETES CON PRIORIDAD MINIMA (RECURSIVO)
+    // --------------------------------------------------
+
+    public static int contarPorPrioridad(
+            List<Paquete> paquetes,
+            int prioridadMinima) {
+
+        Objects.requireNonNull(paquetes, "La lista no puede ser nula.");
+
+        if (prioridadMinima < 1 || prioridadMinima > 5) {
+            throw new IllegalArgumentException(
+                    "La prioridad minima debe estar entre 1 y 5."
+            );
+        }
+
+        return contarPorPrioridad(
+                paquetes,
+                prioridadMinima,
+                0
+        );
+    }
+
+    private static int contarPorPrioridad(
+            List<Paquete> paquetes,
+            int prioridadMinima,
+            int indice) {
+
+        if (indice >= paquetes.size()) {
+            return 0;
+        }
+
+        int cantidadActual = 0;
+
+        if (paquetes.get(indice).getPrioridad() >= prioridadMinima) {
+            cantidadActual = 1;
+        }
+
+        return cantidadActual + contarPorPrioridad(
+                paquetes,
+                prioridadMinima,
+                indice + 1
+        );
+    }
+
+    // --------------------------------------------------
+    // 4. PAQUETE DE MAYOR PESO (DIVIDE Y VENCERAS)
+    // --------------------------------------------------
+
+    public static Paquete paqueteMasPesado(List<Paquete> paquetes) {
+
+        Objects.requireNonNull(paquetes, "La lista no puede ser nula.");
+
+        if (paquetes.isEmpty()) {
+            return null;
+        }
+
+        return buscarMasPesado(
+                paquetes,
+                0,
+                paquetes.size() - 1
+        );
+    }
+
+    private static Paquete buscarMasPesado(
+            List<Paquete> paquetes,
+            int izquierda,
+            int derecha) {
+
+        // Caso base: solo hay un paquete.
+        if (izquierda == derecha) {
+            return paquetes.get(izquierda);
+        }
+
+        // Dividir el intervalo en dos partes.
+        int medio = izquierda + (derecha - izquierda) / 2;
+
+        Paquete paqueteIzquierdo = buscarMasPesado(
+                paquetes,
+                izquierda,
+                medio
+        );
+
+        Paquete paqueteDerecho = buscarMasPesado(
+                paquetes,
+                medio + 1,
+                derecha
+        );
+
+        // Comparar los resultados de ambas partes.
+        if (paqueteIzquierdo.getPeso() >= paqueteDerecho.getPeso()) {
+            return paqueteIzquierdo;
+        }
+
+        return paqueteDerecho;
+    }
+}
+
+========== src/main/java/com/quindioexpress/app/Main.java ==========
+package com.quindioexpress.app;
+
+import com.quindioexpress.model.Paquete;
+import com.quindioexpress.model.Repartidor;
+import com.quindioexpress.service.CentroDistribucion;
+
+import java.util.Scanner;
+
+public class Main {
+
+    private static CentroDistribucion centro = new CentroDistribucion();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        inicializarDatos();
+
+        int opcion = -1;
+        do {
+            mostrarMenu();
+            System.out.print("Ingrese una opcion: ");
+            
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+                System.out.println();
+                procesarOpcion(opcion);
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Debe ingresar un numero entero valido.");
+                opcion = -1;
+            }
+
+        } while (opcion != 0);
+
+        System.out.println("Programa finalizado.");
+   
+    }
+
+    private static void mostrarMenu() {
+        System.out.println("\n   -----    ");
+        System.out.println("   QUINDIOFRESHH ");
+        System.out.println("1. Ver resumen del centro");
+        System.out.println("2. Ver destinos ordenados");
+        System.out.println("3. Buscar paquete por codigo (Secuencial)");
+        System.out.println("4. Buscar paquete por codigo (Binaria)");
+        System.out.println("5. Calcular peso total por destino");
+        System.out.println("6. Contar paquetes por prioridad");
+        System.out.println("7. Obtener paquete mas pesado");
+        System.out.println("8. Obtener siguiente paquete a despachar");
+        System.out.println("9. Asignar paquete a repartidor");
+        System.out.println("10. Registrar entrega de paquete");
+        System.out.println("11. Registrar nuevo paquete");
+        System.out.println("0. Salir");
+    }
+
+    private static void procesarOpcion(int opcion) {
+        switch (opcion) {
+            case 1 -> mostrarResumen();
+            case 2 -> listarDestinos();
+            case 3 -> buscarPaqueteSecuencial();
+            case 4 -> buscarPaqueteBinario();
+            case 5 -> calcularPesoPorDestino();
+            case 6 -> contarPorPrioridad();
+            case 7 -> verPaqueteMasPesado();
+            case 8 -> verSiguientePaquete();
+            case 9 -> asignarPaquete();
+            case 10 -> registrarEntrega();
+            case 11 -> registrarNuevoPaquete();
+            case 0 -> {}
+            default -> System.out.println("Opcion no valida. Intente de nuevo.");
+        }
+    }
+
+    // --- METODOS DE CADA OPCION ---
+
+    private static void mostrarResumen() {
+        System.out.println("--- RESUMEN ---");
+        System.out.println("Paquetes registrados: " + centro.cantidadPaquetesRegistrados());
+        System.out.println("Repartidores registrados: " + centro.cantidadRepartidoresRegistrados());
+        System.out.println("Destinos registrados: " + centro.cantidadDestinos());
+        System.out.println("Paquetes pendientes: " + centro.cantidadPaquetesPendientes());
+        System.out.println("Entregas registradas: " + centro.cantidadEntregas());
+    }
+
+    private static void listarDestinos() {
+        System.out.println("--- DESTINOS ORDENADOS ---");
+        for (String destino : centro.obtenerDestinosOrdenados()) {
+            System.out.println("- " + destino);
+        }
+    }
+
+    private static void buscarPaqueteSecuencial() {
+        System.out.print("Ingrese el codigo del paquete (ej. P118): ");
+        String codigo = scanner.nextLine().trim();
+        
+        Paquete paquete = centro.buscarPaquete(codigo);
+        if (paquete != null) {
+            System.out.println("Paquete encontrado:");
+            System.out.println(paquete);
+        } else {
+            System.out.println("No se encontro un paquete con el codigo: " + codigo);
+        }
+    }
+
+    private static void buscarPaqueteBinario() {
+        System.out.print("Ingrese el codigo del paquete (ej. P130): ");
+        String codigo = scanner.nextLine().trim();
+        
+        Paquete paquete = centro.buscarPaqueteBinario(codigo);
+        if (paquete != null) {
+            System.out.println("Paquete encontrado (Busqueda Binaria):");
+            System.out.println(paquete);
+        } else {
+            System.out.println("No se encontro un paquete con el codigo: " + codigo);
+        }
+    }
+
+    private static void calcularPesoPorDestino() {
+        System.out.print("Ingrese la ciudad/destino: ");
+        String destino = scanner.nextLine().trim();
+        
+        double pesoTotal = centro.calcularPesoTotalPorDestino(destino);
+        System.out.println("Peso total para " + destino + ": " + pesoTotal + " kg");
+    }
+
+    private static void contarPorPrioridad() {
+        System.out.print("Ingrese la prioridad minima a filtrar: ");
+        try {
+            int prioridad = Integer.parseInt(scanner.nextLine().trim());
+            int cantidad = centro.contarPaquetesPorPrioridad(prioridad);
+            System.out.println("Total de paquetes con prioridad >= " + prioridad + ": " + cantidad);
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Debe ingresar un valor numerico.");
+        }
+    }
+
+    private static void verPaqueteMasPesado() {
+        System.out.println("--- PAQUETE MAS PESADO ---");
+        Paquete pesado = centro.obtenerPaqueteMasPesado();
+        if (pesado != null) {
+            System.out.println(pesado);
+        } else {
+            System.out.println("No hay paquetes registrados.");
+        }
+    }
+
+    private static void verSiguientePaquete() {
+        System.out.println("--- SIGUIENTE PAQUETE PARA DESPACHO ---");
+        Paquete siguiente = centro.obtenerSiguientePaquete();
+        if (siguiente != null) {
+            System.out.println(siguiente);
+        } else {
+            System.out.println("No hay paquetes pendientes por despachar.");
+        }
+    }
+
+    private static void asignarPaquete() {
+        System.out.print("Ingrese codigo del paquete (ej. P105): ");
+        String codPaquete = scanner.nextLine().trim();
+        System.out.print("Ingrese codigo del repartidor (ej. R01): ");
+        String codRepartidor = scanner.nextLine().trim();
+
+        try {
+            centro.asignarPaquete(codPaquete, codRepartidor);
+            System.out.println("El paquete " + codPaquete + " fue asignado a " + codRepartidor + " correctamente.");
+        } catch (Exception e) {
+            System.out.println("Error al realizar la asignacion: " + e.getMessage());
+        }
+    }
+
+    private static void registrarEntrega() {
+        System.out.print("Ingrese codigo del paquete entregado (ej. P105): ");
+        String codPaquete = scanner.nextLine().trim();
+
+        try {
+            centro.registrarEntrega(codPaquete);
+            System.out.println("Entrega confirmada para el paquete " + codPaquete + ".");
+        } catch (Exception e) {
+            System.out.println("Error al registrar la entrega: " + e.getMessage());
+        }
+    }
+
+    private static void registrarNuevoPaquete() {
+        System.out.println("--- REGISTRO DE NUEVO PAQUETE ---");
+
+        System.out.print("Codigo del paquete (ej. P150): ");
+        String codigo = scanner.nextLine().trim();
+
+        System.out.print("Ciudad de destino: ");
+        String destino = scanner.nextLine().trim();
+
+        double peso;
+        try {
+            System.out.print("Peso en kg (ej. 4.5): ");
+            peso = Double.parseDouble(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El peso debe ser un número valido.");
+            return;
+        }
+
+        int prioridad;
+        try {
+            System.out.print("Prioridad (1 a 5): ");
+            prioridad = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: La prioridad debe ser un numero entero.");
+            return;
+        }
+
+        int tiempoEstimado;
+        try {
+            System.out.print("Tiempo estimado de entrega en minutos (ej. 45): ");
+            tiempoEstimado = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: El tiempo estimado debe ser un numero entero.");
+            return;
+        }
+
+        try {
+            Paquete nuevo = new Paquete(codigo, destino, peso, prioridad, tiempoEstimado);
+            centro.registrarPaquete(nuevo);
+            System.out.println("Paquete " + codigo + " registrado exitosamente en el sistema.");
+        } catch (Exception e) {
+            System.out.println("Error al registrar paquete: " + e.getMessage());
+        }
+    }
+
+    // --- REGISTRO INICIAL ---
+
+    private static void inicializarDatos() {
+        // Registrar repartidores
+        centro.registrarRepartidor(new Repartidor("R01", "Carlos", "Armenia", true));
+        centro.registrarRepartidor(new Repartidor("R02", "Laura", "Pereira", true));
+        centro.registrarRepartidor(new Repartidor("R03", "Andres", "Calarca", true));
+        centro.registrarRepartidor(new Repartidor("R04", "Sofia", "Montenegro", true));
+        centro.registrarRepartidor(new Repartidor("R05", "Daniel", "Circasia", true));
+        centro.registrarRepartidor(new Repartidor("R06", "Valentina", "Armenia", true));
+
+        // Registrar 30 paquetes
+        centro.registrarPaquete(new Paquete("P105", "Armenia", 4.5, 5, 30));
+        centro.registrarPaquete(new Paquete("P102", "Pereira", 2.3, 3, 45));
+        centro.registrarPaquete(new Paquete("P118", "Calarca", 8.0, 4, 25));
+        centro.registrarPaquete(new Paquete("P111", "Montenegro", 1.5, 2, 60));
+        centro.registrarPaquete(new Paquete("P130", "Circasia", 6.2, 5, 20));
+        centro.registrarPaquete(new Paquete("P107", "Armenia", 3.1, 4, 35));
+        centro.registrarPaquete(new Paquete("P125", "Pereira", 9.4, 2, 50));
+        centro.registrarPaquete(new Paquete("P109", "Calarca", 2.7, 1, 70));
+        centro.registrarPaquete(new Paquete("P140", "Montenegro", 5.6, 3, 40));
+        centro.registrarPaquete(new Paquete("P115", "Circasia", 7.8, 4, 25));
+        centro.registrarPaquete(new Paquete("P103", "Armenia", 1.2, 2, 55));
+        centro.registrarPaquete(new Paquete("P122", "Pereira", 4.8, 5, 30));
+        centro.registrarPaquete(new Paquete("P135", "Calarca", 6.5, 3, 45));
+        centro.registrarPaquete(new Paquete("P114", "Montenegro", 2.0, 1, 80));
+        centro.registrarPaquete(new Paquete("P128", "Circasia", 3.9, 4, 35));
+        centro.registrarPaquete(new Paquete("P101", "Armenia", 10.5, 5, 15));
+        centro.registrarPaquete(new Paquete("P119", "Pereira", 2.8, 2, 65));
+        centro.registrarPaquete(new Paquete("P145", "Calarca", 4.1, 5, 20));
+        centro.registrarPaquete(new Paquete("P106", "Montenegro", 8.7, 3, 40));
+        centro.registrarPaquete(new Paquete("P133", "Circasia", 1.8, 2, 60));
+        centro.registrarPaquete(new Paquete("P117", "Armenia", 5.3, 3, 45));
+        centro.registrarPaquete(new Paquete("P124", "Pereira", 7.1, 4, 25));
+        centro.registrarPaquete(new Paquete("P108", "Calarca", 3.6, 2, 50));
+        centro.registrarPaquete(new Paquete("P138", "Montenegro", 9.2, 5, 18));
+        centro.registrarPaquete(new Paquete("P112", "Circasia", 2.4, 1, 75));
+        centro.registrarPaquete(new Paquete("P126", "Armenia", 6.8, 4, 28));
+        centro.registrarPaquete(new Paquete("P104", "Pereira", 1.6, 1, 90));
+        centro.registrarPaquete(new Paquete("P143", "Calarca", 5.9, 3, 38));
+        centro.registrarPaquete(new Paquete("P116", "Montenegro", 4.3, 4, 32));
+        centro.registrarPaquete(new Paquete("P132", "Circasia", 11.0, 5, 12));
+    }
+}
+
+========== src/main/java/com/quindioexpress/comparator/ComparacionBusquedaPaquetes.java ==========
+
+package com.quindioexpress.comparator;
+
+import com.quindioexpress.model.Paquete;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ComparacionBusquedaPaquetes {
+
+    public static Paquete buscarEnLista(
+            List<Paquete> paquetes, String codigo) {
+
+        for (Paquete paquete : paquetes) {
+            if (paquete.getCodigo().equals(codigo)) {
+                return paquete;
+            }
+        }
+
+        return null;
+    }
+
+    public static void probar(int cantidad) {
+
+        List<Paquete> lista = new ArrayList<>();
+        Map<String, Paquete> mapa = new HashMap<>();
+
+
+        for (int i = 0; i < cantidad; i++) {
+
+            String codigo = String.format("P%06d", i);
+
+            Paquete paquete = new Paquete(
+                    codigo,
+                    "Armenia",
+                    2.5,
+                    3,
+                    30
+            );
+
+            lista.add(paquete);
+            mapa.put(paquete.getCodigo(), paquete);
+        }
+
+
+        String codigoBuscado =
+                String.format("P%06d", cantidad - 1);
+
+        int repeticiones = 100;
+
+        long inicioLista = System.nanoTime();
+
+        for (int i = 0; i < repeticiones; i++) {
+            buscarEnLista(lista, codigoBuscado);
+        }
+
+        long tiempoLista =
+                System.nanoTime() - inicioLista;
+
+
+        long inicioMapa = System.nanoTime();
+
+        for (int i = 0; i < repeticiones; i++) {
+            mapa.get(codigoBuscado);
+        }
+
+        long tiempoMapa =
+                System.nanoTime() - inicioMapa;
+
+        System.out.println("\nCantidad de paquetes: " + cantidad);
+
+        System.out.printf(
+                "ArrayList: %.3f ms%n",
+                tiempoLista / 1_000_000.0
+        );
+
+        System.out.printf(
+                "HashMap:   %.3f ms%n",
+                tiempoMapa / 1_000_000.0
+        );
+
+        System.out.println(
+                "Paquete encontrado: "
+                        + (mapa.get(codigoBuscado) != null)
+        );
+    }
+
+    public static void main(String[] args) {
+
+        probar(30);
+        probar(500_000);
+    }
+}
+
+
+========== src/main/java/com/quindioexpress/comparator/ComparadoresPaquete.java ==========
+package com.quindioexpress.comparator;
+
+import com.quindioexpress.model.Paquete;
+import java.util.Comparator;
+
+public class ComparadoresPaquete {
+
+    private ComparadoresPaquete() {
+        // Evita crear objetos de esta clase.
+    }
+
+    // Prioridad mayor primero.
+    public static final Comparator<Paquete> POR_PRIORIDAD =
+            Comparator.comparingInt(Paquete::getPrioridad)
+                    .reversed()
+                    .thenComparing(Paquete::getCodigo);
+
+    // Paquetes de mayor peso primero.
+    public static final Comparator<Paquete> POR_PESO =
+            Comparator.comparingDouble(Paquete::getPeso)
+                    .reversed()
+                    .thenComparing(Paquete::getCodigo);
+
+    // Menor tiempo estimado primero.
+    public static final Comparator<Paquete> POR_TIEMPO =
+            Comparator.comparingInt(Paquete::getTiempoEstimado)
+                    .thenComparing(Paquete::getCodigo);
+}
+
+========== src/main/java/com/quindioexpress/model/EstadoPaquete.java ==========
+package com.quindioexpress.model;
+
+public enum EstadoPaquete {
+    PENDIENTE,
+    ASIGNADO,
+    ENTREGADO
+}
+
+========== src/main/java/com/quindioexpress/model/Paquete.java ==========
+package com.quindioexpress.model;
+
+import java.util.Objects;
+
+public class Paquete implements Comparable<Paquete> {
+
+    private final String codigo;
+    private final String destino;
+    private final double peso;
+    private final int prioridad;
+    private final int tiempoEstimado;
+
+    private EstadoPaquete estado;
+    private Repartidor repartidorAsignado;
+
+    public Paquete(
+            String codigo,
+            String destino,
+            double peso,
+            int prioridad,
+            int tiempoEstimado) {
+
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El codigo del paquete no puede ser nulo ni vacio."
+            );
+        }
+
+        if (destino == null || destino.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El destino no puede ser nulo ni vacio."
+            );
+        }
+
+        if (!Double.isFinite(peso) || peso <= 0) {
+            throw new IllegalArgumentException(
+                    "El peso debe ser mayor que cero."
+            );
+        }
+
+        if (prioridad < 1 || prioridad > 5) {
+            throw new IllegalArgumentException(
+                    "La prioridad debe estar entre 1 y 5."
+            );
+        }
+
+        if (tiempoEstimado <= 0) {
+            throw new IllegalArgumentException(
+                    "El tiempo estimado debe ser mayor que cero."
+            );
+        }
+
+        this.codigo = codigo.trim();
+        this.destino = destino.trim();
+        this.peso = peso;
+        this.prioridad = prioridad;
+        this.tiempoEstimado = tiempoEstimado;
+
+        this.estado = EstadoPaquete.PENDIENTE;
+        this.repartidorAsignado = null;
+    }
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public String getDestino() {
+        return destino;
+    }
+
+    public double getPeso() {
+        return peso;
+    }
+
+    public int getPrioridad() {
+        return prioridad;
+    }
+
+    public int getTiempoEstimado() {
+        return tiempoEstimado;
+    }
+
+    public EstadoPaquete getEstado() {
+        return estado;
+    }
+
+    public Repartidor getRepartidorAsignado() {
+        return repartidorAsignado;
+    }
+
+    public void asignarA(Repartidor repartidor) {
+
+        Objects.requireNonNull(
+                repartidor,
+                "El repartidor no puede ser nulo."
+        );
+
+        if (estado != EstadoPaquete.PENDIENTE) {
+            throw new IllegalStateException(
+                    "Solo se pueden asignar paquetes pendientes."
+            );
+        }
+
+        if (!repartidor.estaDisponible()) {
+            throw new IllegalStateException(
+                    "El repartidor no esta disponible."
+            );
+        }
+
+        if (!destino.equalsIgnoreCase(repartidor.getZona())) {
+            throw new IllegalArgumentException(
+                    "La zona del repartidor no coincide con el destino."
+            );
+        }
+
+        this.repartidorAsignado = repartidor;
+        this.estado = EstadoPaquete.ASIGNADO;
+
+        repartidor.setDisponible(false);
+    }
+
+    public void registrarEntrega() {
+
+        if (estado != EstadoPaquete.ASIGNADO) {
+            throw new IllegalStateException(
+                    "Solo se pueden entregar paquetes asignados."
+            );
+        }
+
+        this.estado = EstadoPaquete.ENTREGADO;
+
+        repartidorAsignado.setDisponible(true);
+    }
+
+    @Override
+    public int compareTo(Paquete otro) {
+
+        Objects.requireNonNull(
+                otro,
+                "El paquete que se va a comparar no puede ser nulo."
+        );
+
+        return this.codigo.compareTo(otro.codigo);
+    }
+
+    @Override
+    public boolean equals(Object objeto) {
+
+        if (this == objeto) {
+            return true;
+        }
+
+        if (!(objeto instanceof Paquete)) {
+            return false;
+        }
+
+        Paquete otro = (Paquete) objeto;
+
+        return codigo.equals(otro.codigo);
+    }
+
+    @Override
+    public int hashCode() {
+        return codigo.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Paquete{" +
+                "codigo='" + codigo + '\'' +
+                ", destino='" + destino + '\'' +
+                ", peso=" + peso +
+                ", prioridad=" + prioridad +
+                ", tiempoEstimado=" + tiempoEstimado +
+                ", estado=" + estado +
+                '}';
+    }
+}
+
+========== src/main/java/com/quindioexpress/model/Repartidor.java ==========
+package com.quindioexpress.model;
+
+public class Repartidor {
+
+    private final String identificacion;
+    private final String nombre;
+    private final String zona;
+    private boolean disponible;
+
+    public Repartidor(
+            String identificacion,
+            String nombre,
+            String zona,
+            boolean disponible) {
+
+        if (identificacion == null || identificacion.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La identificacion no puede ser nula ni vacia."
+            );
+        }
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El nombre no puede ser nulo ni vacio."
+            );
+        }
+
+        if (zona == null || zona.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La zona no puede ser nula ni vacia."
+            );
+        }
+
+        this.identificacion = identificacion.trim();
+        this.nombre = nombre.trim();
+        this.zona = zona.trim();
+        this.disponible = disponible;
+    }
+
+    public String getIdentificacion() {
+        return identificacion;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getZona() {
+        return zona;
+    }
+
+    public boolean estaDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
+    }
+
+    @Override
+    public String toString() {
+        return "Repartidor{" +
+                "identificacion='" + identificacion + '\'' +
+                ", nombre='" + nombre + '\'' +
+                ", zona='" + zona + '\'' +
+                ", disponible=" + disponible +
+                '}';
+    }
+}
+
+========== src/main/java/com/quindioexpress/service/CentroDistribucion.java ==========
+package com.quindioexpress.service;
+
+import com.quindioexpress.algorithm.AnalisisPaquetes;
+import com.quindioexpress.comparator.ComparadoresPaquete;
+import com.quindioexpress.model.EstadoPaquete;
+import com.quindioexpress.model.Paquete;
+import com.quindioexpress.model.Repartidor;
+import com.quindioexpress.structure.ListaEnlazada;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class CentroDistribucion {
+
+    // Conserva el orden original de registro.
+    private final List<Paquete> paquetesRegistrados;
+
+    // Consulta rapida de paquetes por codigo.
+    private final Map<String, Paquete> paquetesPorCodigo;
+
+    // Destinos unicos, sin necesidad de ordenarlos.
+    private final Set<String> destinosUnicos;
+
+    // Destinos unicos ordenados alfabeticamente.
+    private final TreeSet<String> destinosOrdenados;
+
+    // Destino -> paquetes registrados para ese destino.
+    private final Map<String, List<Paquete>> paquetesPorDestino;
+
+    // Identificacion -> repartidor.
+    private final Map<String, Repartidor> repartidoresPorId;
+
+    // Cola de despacho de paquetes pendientes.
+    private final PriorityQueue<Paquete> colaDespacho;
+
+    // Historial de paquetes entregados.
+    private final ListaEnlazada<Paquete> historialEntregas;
+
+    public CentroDistribucion() {
+
+        paquetesRegistrados = new ArrayList<>();
+
+        paquetesPorCodigo = new HashMap<>();
+
+        destinosUnicos = new HashSet<>();
+
+        destinosOrdenados = new TreeSet<>(
+                String.CASE_INSENSITIVE_ORDER
+        );
+
+        paquetesPorDestino = new HashMap<>();
+
+        repartidoresPorId = new HashMap<>();
+
+        colaDespacho = new PriorityQueue<>(
+                ComparadoresPaquete.POR_PRIORIDAD
+        );
+
+        historialEntregas = new ListaEnlazada<>();
+    }
+
+    // --------------------------------------------------
+    // REGISTRAR PAQUETE
+    // --------------------------------------------------
+
+    public void registrarPaquete(Paquete paquete) {
+
+        Objects.requireNonNull(
+                paquete,
+                "El paquete no puede ser nulo."
+        );
+
+        String codigo = paquete.getCodigo();
+
+        if (paquetesPorCodigo.containsKey(codigo)) {
+            throw new IllegalArgumentException(
+                    "Ya existe un paquete con el codigo: " + codigo
+            );
+        }
+
+        if (paquete.getEstado() != EstadoPaquete.PENDIENTE) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden registrar paquetes pendientes."
+            );
+        }
+
+        String destino = paquete.getDestino();
+
+        String claveDestino = buscarClaveDestino(destino);
+
+        if (claveDestino == null) {
+            claveDestino = destino;
+        }
+
+        // Actualizar el registro principal.
+        paquetesRegistrados.add(paquete);
+        paquetesPorCodigo.put(codigo, paquete);
+
+        // Registrar el destino.
+        destinosUnicos.add(claveDestino);
+        destinosOrdenados.add(claveDestino);
+
+        // Registrar el paquete asociado a su destino.
+        paquetesPorDestino
+                .computeIfAbsent(
+                        claveDestino,
+                        clave -> new ArrayList<>()
+                )
+                .add(paquete);
+
+        // Incorporarlo a la cola de despacho.
+        colaDespacho.offer(paquete);
+    }
+
+    // --------------------------------------------------
+    // REGISTRAR REPARTIDOR
+    // --------------------------------------------------
+
+    public void registrarRepartidor(Repartidor repartidor) {
+
+        Objects.requireNonNull(
+                repartidor,
+                "El repartidor no puede ser nulo."
+        );
+
+        String identificacion = repartidor.getIdentificacion();
+
+        if (repartidoresPorId.containsKey(identificacion)) {
+            throw new IllegalArgumentException(
+                    "Ya existe un repartidor con la identificacion: "
+                            + identificacion
+            );
+        }
+
+        repartidoresPorId.put(identificacion, repartidor);
+    }
+
+    // --------------------------------------------------
+    // CONSULTAR PAQUETE POR CODIGO
+    // --------------------------------------------------
+
+    public Paquete buscarPaquete(String codigo) {
+
+        Objects.requireNonNull(
+                codigo,
+                "El codigo no puede ser nulo."
+        );
+
+        return paquetesPorCodigo.get(codigo);
+    }
+
+    // --------------------------------------------------
+    // CONSULTAR REPARTIDOR POR IDENTIFICACION
+    // --------------------------------------------------
+
+    public Repartidor buscarRepartidor(String identificacion) {
+
+        Objects.requireNonNull(
+                identificacion,
+                "La identificacion no puede ser nula."
+        );
+
+        return repartidoresPorId.get(identificacion);
+    }
+
+    // --------------------------------------------------
+    // OBTENER PAQUETES EN ORDEN DE REGISTRO
+    // --------------------------------------------------
+
+    public List<Paquete> obtenerPaquetesRegistrados() {
+
+        return Collections.unmodifiableList(
+                new ArrayList<>(paquetesRegistrados)
+        );
+    }
+
+    // --------------------------------------------------
+    // OBTENER DESTINOS ORDENADOS
+    // --------------------------------------------------
+
+    public Set<String> obtenerDestinosOrdenados() {
+
+        return Collections.unmodifiableSet(
+                new TreeSet<>(destinosOrdenados)
+        );
+    }
+
+    // --------------------------------------------------
+    // OBTENER PAQUETES POR DESTINO
+    // --------------------------------------------------
+
+    public List<Paquete> obtenerPaquetesPorDestino(String destino) {
+
+        Objects.requireNonNull(
+                destino,
+                "El destino no puede ser nulo."
+        );
+
+        String claveDestino = buscarClaveDestino(destino);
+
+        if (claveDestino == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(
+                new ArrayList<>(
+                        paquetesPorDestino.get(claveDestino)
+                )
+        );
+    }
+
+    // --------------------------------------------------
+    // OBTENER SIGUIENTE PAQUETE PARA DESPACHAR
+    // --------------------------------------------------
+
+    public Paquete obtenerSiguientePaquete() {
+        return colaDespacho.peek();
+    }
+
+    // --------------------------------------------------
+    // ASIGNAR PAQUETE A REPARTIDOR
+    // --------------------------------------------------
+
+    public void asignarPaquete(
+            String codigoPaquete,
+            String identificacionRepartidor) {
+
+        Paquete paquete = buscarPaquete(codigoPaquete);
+
+        if (paquete == null) {
+            throw new IllegalArgumentException(
+                    "No existe el paquete: " + codigoPaquete
+            );
+        }
+
+        Repartidor repartidor = buscarRepartidor(
+                identificacionRepartidor
+        );
+
+        if (repartidor == null) {
+            throw new IllegalArgumentException(
+                    "No existe el repartidor: "
+                            + identificacionRepartidor
+            );
+        }
+
+        if (paquete.getEstado() != EstadoPaquete.PENDIENTE) {
+            throw new IllegalStateException(
+                    "El paquete no esta pendiente."
+            );
+        }
+
+        if (!repartidor.estaDisponible()) {
+            throw new IllegalStateException(
+                    "El repartidor no esta disponible."
+            );
+        }
+
+        if (!paquete.getDestino().equalsIgnoreCase(repartidor.getZona())) {
+            throw new IllegalArgumentException(
+                    "La zona del repartidor no coincide con el destino."
+            );
+        }
+
+        // El paquete debe estar en la cola antes de asignarlo.
+        if (!colaDespacho.contains(paquete)) {
+            throw new IllegalStateException(
+                    "El paquete no se encuentra en la cola de despacho."
+            );
+        }
+
+        // Actualizar el estado del paquete y del repartidor.
+        paquete.asignarA(repartidor);
+
+        // Los paquetes asignados dejan de estar pendientes.
+        colaDespacho.remove(paquete);
+    }
+
+    // --------------------------------------------------
+    // REGISTRAR ENTREGA
+    // --------------------------------------------------
+
+    public void registrarEntrega(String codigoPaquete) {
+
+        Paquete paquete = buscarPaquete(codigoPaquete);
+
+        if (paquete == null) {
+            throw new IllegalArgumentException(
+                    "No existe el paquete: " + codigoPaquete
+            );
+        }
+
+        if (paquete.getEstado() != EstadoPaquete.ASIGNADO) {
+            throw new IllegalStateException(
+                    "Solo se pueden entregar paquetes asignados."
+            );
+        }
+
+        // Registrar la entrega en el historial.
+        historialEntregas.agregar(paquete);
+
+        // Cambiar el estado y liberar al repartidor.
+        paquete.registrarEntrega();
+    }
+
+    // --------------------------------------------------
+    // CONSULTAR HISTORIAL DE ENTREGAS
+    // --------------------------------------------------
+
+    public ListaEnlazada<Paquete> obtenerHistorialEntregas() {
+        return historialEntregas;
+    }
+
+    // --------------------------------------------------
+    // BUSQUEDA BINARIA POR CODIGO
+    // --------------------------------------------------
+
+    public Paquete buscarPaqueteBinario(String codigo) {
+
+        Objects.requireNonNull(
+                codigo,
+                "El codigo no puede ser nulo."
+        );
+
+        List<Paquete> ordenados = new ArrayList<>(
+                paquetesRegistrados
+        );
+
+        Collections.sort(ordenados);
+
+        return AnalisisPaquetes.busquedaBinaria(
+                ordenados,
+                codigo
+        );
+    }
+
+    // --------------------------------------------------
+    // PESO TOTAL POR DESTINO
+    // --------------------------------------------------
+
+    public double calcularPesoTotalPorDestino(String destino) {
+
+        Objects.requireNonNull(
+                destino,
+                "El destino no puede ser nulo."
+        );
+
+        List<Paquete> paquetes = obtenerPaquetesPorDestino(destino);
+
+        return AnalisisPaquetes.pesoTotalPorDestino(
+                paquetes,
+                destino
+        );
+    }
+
+    // --------------------------------------------------
+    // CONTAR PAQUETES POR PRIORIDAD MINIMA
+    // --------------------------------------------------
+
+    public int contarPaquetesPorPrioridad(int prioridadMinima) {
+
+        return AnalisisPaquetes.contarPorPrioridad(
+                paquetesRegistrados,
+                prioridadMinima
+        );
+    }
+
+    // --------------------------------------------------
+    // ENCONTRAR PAQUETE MAS PESADO
+    // --------------------------------------------------
+
+    public Paquete obtenerPaqueteMasPesado() {
+
+        return AnalisisPaquetes.paqueteMasPesado(
+                paquetesRegistrados
+        );
+    }
+
+    // --------------------------------------------------
+    // CONSULTAR CANTIDADES
+    // --------------------------------------------------
+
+    public int cantidadPaquetesRegistrados() {
+        return paquetesRegistrados.size();
+    }
+
+    public int cantidadRepartidoresRegistrados() {
+        return repartidoresPorId.size();
+    }
+
+    public int cantidadDestinos() {
+        return destinosUnicos.size();
+    }
+
+    public int cantidadPaquetesPendientes() {
+        return colaDespacho.size();
+    }
+
+    public int cantidadEntregas() {
+        return historialEntregas.tamaño();
+    }
+
+    // --------------------------------------------------
+    // BUSCAR NOMBRE CANONICO DEL DESTINO
+    // --------------------------------------------------
+
+    private String buscarClaveDestino(String destino) {
+
+        for (String destinoRegistrado : destinosUnicos) {
+
+            if (destinoRegistrado.equalsIgnoreCase(destino)) {
+                return destinoRegistrado;
+            }
+        }
+
+        return null;
+    }
+}
+
+========== src/main/java/com/quindioexpress/structure/Coleccion.java ==========
+package com.quindioexpress.structure;
+
+public interface Coleccion<T> {
+
+    void agregar(T elemento);
+
+    boolean eliminar(T elemento);
+
+    T obtener(int indice);
+
+    int tamaño();
+
+    boolean estaVacia();
+}
+
+========== src/main/java/com/quindioexpress/structure/ListaEnlazada.java ==========
+package com.quindioexpress.structure;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+
+public class ListaEnlazada<T> implements Coleccion<T>, Iterable<T> {
+
+    private static class Nodo<T> {
+
+        private T elemento;
+        private Nodo<T> siguiente;
+
+        public Nodo(T elemento) {
+            this.elemento = elemento;
+            this.siguiente = null;
+        }
+    }
+
+    private Nodo<T> cabeza;
+    private Nodo<T> cola;
+    private int tamaño;
+
+    public ListaEnlazada() {
+        cabeza = null;
+        cola = null;
+        tamaño = 0;
+    }
+
+    @Override
+    public void agregar(T elemento) {
+        Nodo<T> nuevo = new Nodo<>(elemento);
+
+        if (estaVacia()) {
+            cabeza = nuevo;
+            cola = nuevo;
+        } else {
+            cola.siguiente = nuevo;
+            cola = nuevo;
+        }
+
+        tamaño++;
+    }
+
+    @Override
+    public boolean eliminar(T elemento) {
+        if (estaVacia()) {
+            return false;
+        }
+
+        // Caso 1: el elemento está en la cabeza.
+        if (Objects.equals(cabeza.elemento, elemento)) {
+            cabeza = cabeza.siguiente;
+            tamaño--;
+
+            if (cabeza == null) {
+                cola = null;
+            }
+
+            return true;
+        }
+
+        // Caso 2: el elemento está en otra posición.
+        Nodo<T> actual = cabeza;
+
+        while (actual.siguiente != null) {
+
+            if (Objects.equals(actual.siguiente.elemento, elemento)) {
+
+                actual.siguiente = actual.siguiente.siguiente;
+
+                if (actual.siguiente == null) {
+                    cola = actual;
+                }
+
+                tamaño--;
+                return true;
+            }
+
+            actual = actual.siguiente;
+        }
+
+        return false;
+    }
+
+    @Override
+    public T obtener(int indice) {
+        if (indice < 0 || indice >= tamaño) {
+            throw new IndexOutOfBoundsException(
+                    "Indice fuera de los limites de la lista: " + indice
+            );
+        }
+
+        Nodo<T> actual = cabeza;
+
+        for (int i = 0; i < indice; i++) {
+            actual = actual.siguiente;
+        }
+
+        return actual.elemento;
+    }
+
+    @Override
+    public int tamaño() {
+        return tamaño;
+    }
+
+    @Override
+    public boolean estaVacia() {
+        return tamaño == 0;
+    }
+
+    public T obtenerPrimero() {
+        if (estaVacia()) {
+            throw new NoSuchElementException(
+                    "La lista esta vacia."
+            );
+        }
+
+        return cabeza.elemento;
+    }
+
+    public T obtenerUltimo() {
+        if (estaVacia()) {
+            throw new NoSuchElementException(
+                    "La lista esta vacia."
+            );
+        }
+
+        return cola.elemento;
+    }
+
+    public void limpiar() {
+        cabeza = null;
+        cola = null;
+        tamaño = 0;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+
+        return new Iterator<T>() {
+
+            private Nodo<T> actual = cabeza;
+
+            @Override
+            public boolean hasNext() {
+                return actual != null;
+            }
+
+            @Override
+            public T next() {
+
+                if (!hasNext()) {
+                    throw new NoSuchElementException(
+                            "No hay mas elementos en la lista."
+                    );
+                }
+
+                T elemento = actual.elemento;
+                actual = actual.siguiente;
+
+                return elemento;
+            }
+        };
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder resultado = new StringBuilder("[");
+        Nodo<T> actual = cabeza;
+
+        while (actual != null) {
+            resultado.append(actual.elemento);
+
+            if (actual.siguiente != null) {
+                resultado.append(", ");
+            }
+
+            actual = actual.siguiente;
+        }
+
+        resultado.append("]");
+
+        return resultado.toString();
+    }
+}
